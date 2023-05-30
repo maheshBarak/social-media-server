@@ -5,6 +5,7 @@ const dotenv = require("dotenv");
 dotenv.config("./.env");
 const authRouter = require("./routers/authRouter");
 const postRouter = require("./routers/postRouter");
+const userRouter = require("./routers/userRouter");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
@@ -26,6 +27,7 @@ const PORT = process.env.PORT || 4001;
 
 app.use("/auth", authRouter);
 app.use("/posts", postRouter);
+app.use("/user", userRouter);
 
 app.get("/", (req, res) => {
     res.status(200).send("ok");

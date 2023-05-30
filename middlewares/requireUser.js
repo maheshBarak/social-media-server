@@ -18,11 +18,11 @@ module.exports = async (req, res, next) => {
             process.env.ACCESS_TOKEN_PRIVATE_KEY
         );
         req._id = decoded._id;
+        console.log("THis is requireUser middleware");
         next();
     } catch (e) {
         console.log(e);
         // return res.status(401).send("Invalid access key");
         return res.send(error(401, "Invalid access key"));
     }
-    next();
 };

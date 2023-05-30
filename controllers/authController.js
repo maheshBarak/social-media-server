@@ -5,8 +5,8 @@ const { error, success } = require("../utils/responseWrapper");
 
 const signupController = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        if (!email || !password) {
+        const { name, email, password } = req.body;
+        if (!email || !password || !name) {
             // return res.status(400).send("All Fields Required");
             return res.send(error(400, "All Fields Required"));
         }
@@ -20,6 +20,7 @@ const signupController = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
+            name,
             email,
             password: hashedPassword,
         });
@@ -27,13 +28,10 @@ const signupController = async (req, res) => {
         /* return res.status(201).json({
             user,
         }); */
-        return res.send(
-            success(201, {
-                user,
-            })
-        );
-    } catch (error) {
-        console.log(error);
+
+        return res.send(success(201, "user created successfully"));
+    } catch (e) {
+        return res.send(error(500, e.message));
     }
 };
 
@@ -44,7 +42,7 @@ const loginController = async (req, res) => {
             // return res.status(400).send("All Fields Required");
             return res.send(error(409, "All Fields Required"));
         }
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select("+password");
         if (!user) {
             //  return res.status(404).send("User is not registered");
             return res.send(error(404, "User is not registered"));
@@ -71,9 +69,10 @@ const loginController = async (req, res) => {
             secure: true,
         });
         // return res.json({ accessToken });
+        console.log("user logged successfully");
         return res.send(success(200, { accessToken }));
-    } catch (error) {
-        console.log(error);
+    } catch (e) {
+        return res.send(error(500, e.message));
     }
 };
 
@@ -106,12 +105,26 @@ const refreshAccessTokenController = async (req, res) => {
     }
 };
 
+// isme refresh token ko delete karege
+const logOutController = async (req, res) => {
+    try {
+        res.clearCookie("jwt", {
+            httpOnly: true,
+            secure: true,
+        });
+
+        return res.send(success(200, "logged out successfully"));
+    } catch (e) {
+        return res.send(error(500, e.message));
+    }
+};
+
 // internal functions not to be export
 // ** ** * * * * ** * * ** * * * ** * * ** *** ** * * * * ** * * ** * * * ** * * ** * * * * *//
 const generateAccessToken = (data) => {
     try {
         const token = jwt.sign(data, process.env.ACCESS_TOKEN_PRIVATE_KEY, {
-            expiresIn: "15m",
+            expiresIn: "1d",
         });
         console.log("Access Token", token);
         return token;
@@ -137,4 +150,5 @@ module.exports = {
     signupController,
     loginController,
     refreshAccessTokenController,
+    logOutController,
 };
