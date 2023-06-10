@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const Post = require("../models/Post");
 const bcrypt = require("bcrypt"); //for password
 const jwt = require("jsonwebtoken");
 const { error, success } = require("../utils/responseWrapper");

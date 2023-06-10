@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { error } = require("../utils/responseWrapper");
+const User = require("../models/User");
 module.exports = async (req, res, next) => {
     if (
         !req.headers ||
@@ -13,12 +14,18 @@ module.exports = async (req, res, next) => {
     //   console.log(accessToken);
 
     try {
-        const decoded = jwt.verify(
+        const decodedToken = jwt.verify(
             accessToken,
             process.env.ACCESS_TOKEN_PRIVATE_KEY
         );
-        req._id = decoded._id;
-        console.log("THis is requireUser middleware");
+        req._id = decodedToken._id;
+        console.log("This is requireUser middleware");
+
+        const user = await User.findById(req._id);
+
+        if (!user) {
+            return res.send(error(404, "User not found"));
+        }
         next();
     } catch (e) {
         console.log(e);

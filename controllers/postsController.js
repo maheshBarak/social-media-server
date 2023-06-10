@@ -1,39 +1,18 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
 const { success, error } = require("../utils/responseWrapper");
-
-/* const createPostController = async (req, res) => {
-    try {
-        const { caption } = req.body;
-        const owner = req._id; // ye middleware se aara hoga
-
-        const user = await User.findById(req._id);
-
-        const post = await Post.create({
-            owner,
-            caption,
-        });
-
-        user.posts.push(post._id);
-        await user.save();
-
-        console.log("user", user);
-        console.log("post", post);
-
-        return res.send(success(201, { post }));
-    } catch (e) {
-        // console.log("Catch error:", e._message);
-        return res.send(error(500, e._message));
-    }
-}; */
+const cloudinary = require("cloudinary").v2;
 
 const createPostController = async (req, res) => {
     try {
-        const { caption } = req.body;
+        const { caption, postImg } = req.body;
 
-        if (!caption) {
+        if (!caption && !postImg) {
             return res.send(error(400, "Caption and postImg are required"));
         }
+
+        const cloudImg = await cloudinary.uploader.upload(postImg);
+        folder: "postImg";
 
         const owner = req._id;
 
@@ -42,6 +21,10 @@ const createPostController = async (req, res) => {
         const post = await Post.create({
             owner,
             caption,
+            image: {
+                publicId: cloudImg.public_id,
+                url: cloudImg.url,
+            },
         });
 
         user.posts.push(post._id);
@@ -128,9 +111,27 @@ const deletePost = async (req, res) => {
         return res.send(error(500, e.message));
     }
 };
+
+const getMyPosts = async (req, res) => {
+    try {
+        const curUserId = req._id;
+        const curUser = await User.findById(curUserId);
+
+        if (!curUser) {
+            return res.send(error(404, "User not exits"));
+        }
+        const posts = await Post.find({
+            owner: curUserId,
+        }).populate("likes");
+        return res.send(success(200, posts));
+    } catch (e) {
+        return res.send(error(500, e.message));
+    }
+};
 module.exports = {
     createPostController,
     LikeAndUnlikePost,
     updatePostController,
     deletePost,
+    getMyPosts,
 };
